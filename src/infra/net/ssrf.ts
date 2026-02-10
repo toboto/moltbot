@@ -1,6 +1,6 @@
 import { lookup as dnsLookupCb, type LookupAddress } from "node:dns";
 import { lookup as dnsLookup } from "node:dns/promises";
-import { Agent, ProxyAgent, type Dispatcher } from "undici";
+import { Agent, ProxyAgent, setGlobalDispatcher, type Dispatcher } from "undici";
 
 type LookupCallback = (
   err: NodeJS.ErrnoException | null,
@@ -330,4 +330,17 @@ export async function assertPublicHostname(
   lookupFn: LookupFn = dnsLookup,
 ): Promise<void> {
   await resolvePinnedHostname(hostname, lookupFn);
+}
+
+/**
+ * Configure global proxy dispatcher for all fetch requests.
+ * Uses HTTP_PROXY/HTTPS_PROXY environment variables.
+ * Should be called once at application startup.
+ */
+export function configureGlobalProxyDispatcher(): void {
+  const proxyAgent = createProxyAgent();
+  if (proxyAgent) {
+    setGlobalDispatcher(proxyAgent);
+    console.log("[proxy] Global proxy dispatcher configured");
+  }
 }
